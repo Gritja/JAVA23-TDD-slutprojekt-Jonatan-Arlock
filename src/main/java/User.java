@@ -20,7 +20,12 @@ public class User {
     public int getFailedAttempts() { return failedAttempts; }
     public boolean isLocked() { return isLocked; }
     public void lockCard() { this.isLocked = true; }
-    public void incrementFailedAttempts() { this.failedAttempts++; }
+    public void incrementFailedAttempts() {
+        this.failedAttempts++;
+        if(failedAttempts >= 3) {
+            lockCard();
+        }
+    }
     public void resetFailedAttempts() { this.failedAttempts = 0; }
     public void deposit(double amount) { this.balance += amount; }
     public void withdraw(double amount) { this.balance -= amount; }

@@ -1,5 +1,5 @@
 public class ATM {
-    private Bank bank;
+    private final Bank bank;
     private User currentUser;
 
     public ATM(Bank bank) {
@@ -31,8 +31,6 @@ public class ATM {
             return false;
         }
     }
-
-
     public boolean enterPin(String pinEntered) {
         if (checkCard()) {
             if (bank.pinValidate(this.currentUser.getId(), pinEntered)) {
@@ -40,16 +38,13 @@ public class ATM {
                 System.out.println("PIN entered correctly!");
                 return true;
             } else {
-                //currentUser.incrementFailedAttempts();
-                bank.incrementFailedAttempts(currentUser.getId());
-                int attemptsLeft = 3 - currentUser.getFailedAttempts();
-                if (attemptsLeft <= 0) {
+                currentUser.incrementFailedAttempts();
+                if (currentUser.getFailedAttempts() <= 0) {
                     currentUser.lockCard();
                     System.out.println("Your card has been locked. Please contact customer support.");
                 } else {
-                    bank.incrementFailedAttempts(currentUser.getId());
-                    //currentUser.incrementFailedAttempts();
-                    System.out.println("Wrong PIN entered. " + attemptsLeft + " attempts remaining.");
+                    currentUser.incrementFailedAttempts();
+                    System.out.println("Wrong PIN entered. You have tried " +  currentUser.getFailedAttempts() + " times.");
                 }
                 return false;
             }
@@ -64,7 +59,13 @@ public class ATM {
         return currentUser.getBalance();
     }
 
-    public void deposit(double amount) {
+    public boolean deposit(double amount) {
+        if (!checkCard()) {
+            return false;
+        }
+        currentUser.deposit(amount);
+        System.out.println(amount + " was deposited successfully. New balance: " + currentUser.getBalance());
+        return true;
     }
 
     public boolean withdraw(double amount) {
@@ -76,10 +77,13 @@ public class ATM {
             System.out.println("Insufficient funds");
             return false;
         }
-        bank.withdrawFromAccount(currentUser.getId(), amount);
-
+        currentUser.withdraw(amount);
         System.out.println("Withdrawal successful. New balance: " + currentUser.getBalance());
         return true;
     }
 
+    public void removeCard() {
+        currentUser = null;
+        System.out.println("Session terminated.");
+    }
 }

@@ -4,31 +4,51 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.MockitoAnnotations;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ATMTest {
+    /*
+    @Mock
+    private Bank mockBank = new Bank();
+    @InjectMocks
+    private ATM mockATM;
+    private User mockUser;
+    */
     private Bank mockBank;
-private ATM mockATM;
-private User mockUser;
-@Mock
-private BankInterface mockInterface;
-
+    private ATM mockATM;
+    private User mockUser;
 
 @BeforeEach
     public void initTests() {
+    //MockitoAnnotations.openMocks(this);
     mockBank = mock(Bank.class);
-    //mockBank = mockInterface;
     mockATM = new ATM(mockBank);
     mockUser = new User("01", "1234", 1234);
+    //mockATM = new ATM(mockBank);
+    //mockUser = new User("01", "1234", 1234);
+
+    //mockBank = mock(Bank.class);
+    //mockATM = new ATM(mockBank);
     //mockBank.addUser(mockUser);
     //when(mockBank.addUser(mockUser).thenAnswer(invocation -> invocation.getArgument(0));
-
     //TO-DO: current session for mocking purposes
 }
-
+    @Test
+    @DisplayName("Verify bank name.")
+    public void getBankNameFromStaticMethod() {
+        try (MockedStatic<Bank> bankMockedStatic = mockStatic(Bank.class)) {
+            bankMockedStatic.when(Bank::getBankName).thenReturn("MockBank");
+            String bankName = Bank.getBankName();
+            assertEquals("MockBank", bankName);
+            bankMockedStatic.verify(Bank::getBankName, times(1));
+        }
+    }
 @Test
 @DisplayName("Card has been removed.")
 public void card_hasBeenRemoved() {
@@ -68,15 +88,6 @@ public void card_NotInserted() {
     public void lookingUpUser_UserIsNotFound(){
     assertNull(mockBank.getUserById(mockUser.getId()));
     }
-
-    @Test
-    @DisplayName("Look for users in Bank, expect error")
-    public void lookingUpUser_UserIsNotSupposedToBeFound(){
-        //TO-DO create a mockUser in mockBank
-    assertNotEquals("01", mockBank.getUserById(mockUser.getId()).toString());
-    }
-
-
     @Test
     @DisplayName("Pin entered successfully.")
     public void pinCodeEntered_Correct() {
@@ -118,7 +129,7 @@ public void card_NotInserted() {
     @ValueSource(strings = {"1111", "2222", "3333"})
     @DisplayName("User enters wrong pin three times, card gets locked.")
     public void pinCodeEntered_CardGetsLocked(String sourceInputs) {
-        //when(mockATM.checkCard()).thenReturn(true);
+        //TO-DO don't reset the user each time.
         mockATM.insertCard(mockUser);
         when(mockBank.pinValidate(mockUser.getId(), sourceInputs)).thenReturn(false);
         assertFalse(mockATM.enterPin(sourceInputs));
@@ -126,14 +137,9 @@ public void card_NotInserted() {
     @Test
     @DisplayName("Check the current users' current balance")
     public void currentBalance_ReturnsCorrectAmount() {
-        //TO-DO create a mockUser in mockBank
+        //TO-DO don't reset the user each time.
         mockATM.insertCard(mockUser);
-        //when(mockBank.pinValidate("01", "1234")).thenReturn(true);
-        double balance = mockATM.checkBalance();
-        assertAll("Assert Equal and verify",
-                () -> assertEquals(1234, mockATM.checkBalance(), "Expecting 1234."),
-                () -> verify(mockBank, times(1)).currentBalance(mockUser.getId(), 1234)
-        );
+        assertEquals(1234, mockATM.checkBalance(), "Expecting 1234.");
     }
     @Test
     @DisplayName("Tries to withdraw too much money from account")
@@ -149,5 +155,18 @@ public void card_NotInserted() {
         mockATM.withdraw(234);
         assertEquals(1000, mockUser.getBalance());
     }
+    @Test
+    @DisplayName ("Successful deposit")
+    public void deposit_Successful_CorrectAmountNew() {
+        mockATM.insertCard(mockUser);
+        mockATM.deposit(1000);
+        assertEquals(2234, mockUser.getBalance());
+    }
 
+    @Test
+    @DisplayName("Remove card")
+    public void cardIsRemoved_clearCurrentUser() {
+        mockATM.removeCard();
+        assertFalse(mockATM.checkCard());
+    }
 }

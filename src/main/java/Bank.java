@@ -2,9 +2,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class Bank {
+public class Bank implements BankInterface {
     private Map<String, User> users = new HashMap<>();
 
+    public Bank() {
+        users.put("01", new User ("01", "1234", 1234));
+    }
     public User getUserById(String id) {
         return users.get(id);
     }
@@ -38,14 +41,14 @@ public class Bank {
         User user = users.get(userId);
         user.withdraw(amount);
     }
-    public void addUser(User user) {
+    /*public void addUser(User user) {
         users.put(user.getId(), user);
     }
-
+*/
     public static String getBankName() {
         return "MockBank";
     }
-    public double currentBalance(String userId, double amount) {
+    public double currentBalance(String userId) {
         User user = users.get(userId);
         return user.getBalance();
     }
